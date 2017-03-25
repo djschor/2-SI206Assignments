@@ -8,7 +8,7 @@ import tweepy
 import twitter_info # still need this in the same directory, filled out
 
 ## Make sure to comment with:
-# Your name:
+# Your name: Daniel Schorin 
 # The names of any people you worked with for this assignment:
 
 # ******** #
@@ -55,12 +55,23 @@ except:
 # Your function must cache data it retrieves and rely on a cache file!
 # Note that this is a lot like work you have done already in class (but, depending upon what you did previously, may not be EXACTLY the same, so be careful your code does exactly what you want here).
 
+def get_user_tweets(handle):
+	tweet_list = []
+	twitter_results = api.user_timeline(handle)
+	CACHE_DICTION[handle] = twitter_results
+	f = open(CACHE_FNAME, 'w')
+	f.write(json.dumps(CACHE_DICTION))
+	f.close()
+	return twitter_results
 
+	
 
 
 
 # Write code to create/build a connection to a database: tweets.db,
 # And then load all of those tweets you got from Twitter into a database table called Tweets, with the following columns in each row:
+
+
 
 ## tweet_id - containing the unique id that belongs to each tweet
 ## author - containing the screen name of the user who posted the tweet (note that even for RT'd tweets, it will be the person whose timeline it is)
@@ -80,10 +91,31 @@ except:
 # Invoke the function you defined above to get a list that represents a bunch of tweets from the UMSI timeline. Save those tweets in a variable called umsi_tweets.
 
 
+conn = sqlite3.connect('tweets.db')
+cur = conn.cursor()
+cur.execute('DROP TABLE IF EXISTS tracks')
+table_spec = 'CREATE TABLE IF NOT EXISTS '
+table_spec += 'Tweets (id INTEGER PRIMARY KEY, '
+table_spec += 'author TEXT, time_posted TIMESTAMP, tweet_text TEXT, retweets INTEGER)'
+umsi_tweets = get_user_tweets("UMSI") #umsi twitter??
+cur.execute(table_spec)
+#statement = 'DELETE FROM Tweets'
+#cur.execute(statement)
 
-
+#conn.commit()
+tweets = []
+for tweet in umsi_tweets:
+	created = tweet["created_at"]
+	text = tweet["text"]
+	retweets = tweet["retweet_count"]
+	tuples = (None, "UMSI", created, text, retweets)
+	tweets.append(tuples)
+print(tweets)
 # Use a for loop, the cursor you defined above to execute INSERT statements, that insert the data from each of the tweets in umsi_tweets into the correct columns in each row of the Tweets database table.
-
+statement = 'INSERT INTO Tweets VALUES (?, ?, ?, ?, ?)'
+for t in tweets: 
+	cur.execute(statement, t)
+conn.commit()
 # (You should do nested data investigation on the umsi_tweets value to figure out how to pull out the data correctly!)
 
 
@@ -103,19 +135,33 @@ except:
 ## You can verify whether your SQL statements work correctly in the SQLite browser! (And with the tests)
 
 
+
 # Select from the database all of the TIMES the tweets you collected were posted and fetch all the tuples that contain them in to the variable tweet_posted_times.
+tweet_posted  = "SELECT time_posted FROM Tweets"
+cur.execute(tweet_posted)
+tweet_posted_times = cur.fetchall()
 
-
+#cur.execute(tweet_posted_times)
+print(type(tweet_posted_times))
 # Select all of the tweets (the full rows/tuples of information) that have been retweeted MORE than 2 times, and fetch them into the variable more_than_2_rts.
+query = "SELECT * FROM Tweets WHERE retweets > 2"
 
+cur.execute(query)
 
+more_than_2_rts = cur.fetchall() 
 
 # Select all of the TEXT values of the tweets that are retweets of another account (i.e. have "RT" at the beginning of the tweet text). Save the FIRST ONE from that group of text values in the variable first_rt. Note that first_rt should contain a single string value, not a tuple.
 
+query2 = "SELECT * FROM Tweets WHERE instr(tweet_text, 'RT')"
+cur.execute(query2)
 
+tuple_les = cur.fetchone()
+print(tuple_les)
+a, b, c, d, e = tuple_les
+first_rt = d
 
 # Finally, done with database stuff for a bit: write a line of code to close the cursor to the database.
-
+conn.close()
 
 
 ## [PART 3] - Processing data
@@ -132,7 +178,10 @@ except:
 
 # If you want to challenge yourself here -- this function definition (what goes under the def statement) CAN be written in one line! Definitely, definitely fine to write it with multiple lines, too, which will be much easier and clearer.
 
-
+def get_twitter_users(screen):
+	matches = re.findall('@([A-Za-z]+_?[A-Za-z0-9_]+)', screen) #remember second input of regex needs to match function input
+	x = set(matches)
+	return x
 
 
 
@@ -160,7 +209,7 @@ class PartTwo(unittest.TestCase):
 		self.assertEqual(type(tweet_posted_times[2]),type(("hello",)))
 	def test2(self):
 		self.assertEqual(type(more_than_2_rts),type([]))
-		self.assertEqual(type(more_than_2_rts[0]),type(("hello",)))
+		self.assertEqual(type(more_than_2_rts[0]),type(("hello",))) #ignore this test!
 	def test3(self):
 		self.assertEqual(set([x[3][:2] for x in more_than_2_rts]),{"RT"})
 	def test4(self):

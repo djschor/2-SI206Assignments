@@ -17,6 +17,7 @@ import twitter_info # still need this in the same directory, filled out
 ## HW5
 ## https://books.trinket.io/pfe/14-database.html and database examples from class
 ## Lecture 17 notes, Lecture 18 notes
+#turtles
 # ******** #
 
 ## Instructions for this assignment can be found in this file, along with some provided structure and some provided code.

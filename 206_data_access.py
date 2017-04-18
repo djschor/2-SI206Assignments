@@ -69,7 +69,7 @@ def class user_databases:
 	create table friendships with columns wsj_nyt, nyt_fox, and fox_wsj 
 	execute all tables
 
-	insert tweet info into all database tables
+	insert tweet info into all database tables dddddddddddddddddddddddd
 
 
 

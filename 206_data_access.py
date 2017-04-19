@@ -14,6 +14,8 @@
 
 ######### END INSTRUCTIONS #########
 
+
+
 # Put all import statements you need here.
 import unittest
 import itertools
@@ -36,15 +38,20 @@ auth.set_access_token(access_token, access_token_secret)
 #setting up twitter authentification 
 api = tweepy.API(auth, parser=tweepy.parsers.JSONParser())
 
+#creating cache file
+CACHE_FNAME = "final_project.json"
+
 #setting up cache info 
 try:
 	cache_file = open(CACHE_FNAME,'r')
-	cache_contents = cache_ile.read()
+	cache_contents = cache_file.read()
 	cache_file.close()
 	CACHE_DICTION = json.loads(cache_contents)
 except:
 	CACHE_DICTION = {}
 '''
+
+__________________________-BEGIN INSTRUCTIONS-________________________________________ 
 def class get_tweepy_info: 
 	def function get_user_tl and make request to api.user_timeline(handle) 
 
@@ -61,18 +68,92 @@ def class get_tweepy_info:
 	invoke exists_friendship into friendship_wsj_nyt, friendship_nyt_fox, friendship_fox_wsj with respective handles
 
 def class user_databases: 
-	connect to database, establish cursor, drop if exists and create it not, create database "news_twitter_tables" with tables "fox_followers", "wsj_followers", and "nytimes_followers". 
+
+	'''
+	#code for creation of final_project database and creating fox_followers table
+	conn = sqlite3.connect('final_project.db')
+	cur = conn.cursor()
+	cur.execute('DROP TABLE IF EXISTS tracks')
+	table_spec = 'CREATE TABLE IF NOT EXISTS '
+	table_spec += 'fox_followers (screen_name TEXT PRIMARY KEY, '
+	table_spec += 'description TEXT, num_fols INTEGER)'
+	cur.execute(table_spec)
+
+	#creating wsj_followers table
+	cur.execute('DROP TABLE IF EXISTS tracks')
+	table_spec = 'CREATE TABLE IF NOT EXISTS '
+	table_spec += 'wsj_followers (screen_name TEXT PRIMARY KEY, '
+	table_spec += 'description TEXT, num_fols INTEGER)'
+	cur.execute(table_spec)
+
+	#creating nyimes_followers table
+	cur.execute('DROP TABLE IF EXISTS tracks')
+	table_spec = 'CREATE TABLE IF NOT EXISTS '
+	table_spec += 'nytimes_followers (screen_name TEXT PRIMARY KEY, '
+	table_spec += 'description TEXT, num_fols INTEGER)'
+	cur.execute(table_spec)
+
+	#creating wsj_tl table
+	cur.execute('DROP TABLE IF EXISTS tracks')
+	table_spec = 'CREATE TABLE IF NOT EXISTS '
+	table_spec += 'wsj_tl (user_id INTEGER PRIMARY KEY, '
+	table_spec += 'screen_name TEXT, tweets TEXT, retweets INTEGER)'
+	cur.execute(table_spec)
+
+	#creating fox_tl table
+	cur.execute('DROP TABLE IF EXISTS tracks')
+	table_spec = 'CREATE TABLE IF NOT EXISTS '
+	table_spec += 'fox_tl (user_id INTEGER PRIMARY KEY, '
+	table_spec += 'screen_name TEXT, tweets TEXT, retweets INTEGER)'
+	cur.execute(table_spec)
+
+	#creating nyt_tl table
+	cur.execute('DROP TABLE IF EXISTS tracks')
+	table_spec = 'CREATE TABLE IF NOT EXISTS '
+	table_spec += 'nyt_tl (user_id INTEGER PRIMARY KEY, '
+	table_spec += 'screen_name TEXT, tweets TEXT, retweets INTEGER)'
+	cur.execute(table_spec)
+
+	#loading data into wsj_tl table. NOTE: I haven't coded get_wsj_tl yet, but it will contain the invocation of the api request for the home timeline info for wsj, as stated previously in my directions
+	wsj_tl_list = []
+	wsj_tl_id = get_wsj_tl["id"]
+	wsj_screenname = get_wsj_tl['screen_name']
+	wsj_description = get_wsj_tl["description"]
+	tuples = (wsj_tl_id, wsj_screenname, wsj_description)
+	wsj_tl_list.append(tuples)
+	statement = 'INSERT OR IGNORE INTO Users VALUES (?, ?, ?)'
+	for t in users: 
+		cur.execute(statement, t)
+	conn.commit()
+	'''
+	connect to database, establish cursor, drop if exists and create it not, create database "Final_Project" with tables "fox_followers", "wsj_followers", and "nytimes_followers". 
 	In each of those tables, include columns screen_name, description, num_fols
+
 
 	create tables wsj_tl, nyt_tl, fox_tl with columns user_id, screen_name, tweets, retweets !!!!!!!!!!!!!check on project 3 file if columns are all possible
 
 	create table friendships with columns wsj_nyt, nyt_fox, and fox_wsj 
 	execute all tables
 
-	insert tweet info into all database tables dddddddddddddddddddddddd
+	insert tweet info into all database tables 
 
+	query 1 = select all from fox_followers inner join with wsj_followers and nytimes_followers 
+	execute query1 with the cursor, then fetchall 
 
+	query2 = select retweets from wsj_tl inner join with nyt_tl and fox_tl 
+	execute query2 with the cursor, then fetchall
 
+	query 3 = select tweets from wasj_tl inner join with nyt_tl and fox_tl 
+	execute query3 with the cursor, then fetchall
+	
+	query4 = select all from wsj_nyt inner join from nyt_fox and fox_wsj 
+	execute query4 with the cursor, then fetchall
+
+	for a few queries, fetch the query into a list of strings using list comprehension
+
+	finally, use data to create a debrief on the analysis, comparing the three publication's political bias through content of tweets, follower's descriptions (if applicable), and friendships between the respective twitter accounts. 
+
+	__________________________-FINISH INSTRUCTIONS-________________________________________ 
 	
 '''
 
@@ -104,14 +185,14 @@ class Tests(unittest.TestCase):
 		cur = conn.cursor()
 		cur.execute('SELECT * FROM Movies');
 		result = cur.fetchall()
-		self.assertTrue(len(result[0])==7,"Testing that there are 7 columns in the Movies database")
+		self.assertTrue(len(result[0])==4,"Testing that there are 4 columns in the fox_followers database table")
 		conn.close()
 	def eigthtest(self):
 		conn = sqlite3.connect('final_project.db')
 		cur = conn.cursor()
-		cur.execute('SELECT nytimes FROM top_retweets');
+		cur.execute('SELECT nytimes FROM wsj_tl');
 		result = cur.fetchall()
-		self.assertTrue(len(result)<20,"Testing that there are fewer than 20 retweets in the nytimes column in the   top retweets table"
+		self.assertTrue(len(result)<20,"Testing that there are fewer than 20 retweets in the nytimes column in the wsj_tl table"
 		conn.close()
 
 # Remember to invoke your tests so they will run! (Recommend using the verbosity=2 argument.)

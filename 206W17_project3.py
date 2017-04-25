@@ -118,6 +118,7 @@ cur.execute(table_spec)
  ## You should load into the Users table:
 # The umich user, and all of the data about users that are mentioned in the umich timeline. 
 # NOTE: For example, if the user with the "TedXUM" screen name is mentioned in the umich timeline, that Twitter user's info should be in the Users table, etc.
+print(umich_tweets)
 users = []
 userid = umich_info["id"]
 screenname = umich_info['screen_name']

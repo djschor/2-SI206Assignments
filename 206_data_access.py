@@ -39,6 +39,7 @@ auth.set_access_token(access_token, access_token_secret)
 #setting up twitter authentification 
 api = tweepy.API(auth, parser=tweepy.parsers.JSONParser())
 
+
 #creating cache file
 CACHE_FNAME = "final_project.json"
 
@@ -70,8 +71,10 @@ def class get_tweepy_info:
 
 def class user_databases: 
 
-	'''
-	#code for creation of final_project database and creating fox_followers table
+	
+	#code for creation of final_project database and creating fox_followers table    
+
+
 def get_user_tl(handle):
 	twitter_results = api.user_timeline(handle)
 	CACHE_DICTION[handle] = twitter_results
@@ -79,66 +82,226 @@ def get_user_tl(handle):
 	f.write(json.dumps(CACHE_DICTION))
 	f.close()
 	return twitter_results
+'''
+def search_twitter(handle):
+	twitter_results = api.search(handle)
+	CACHE_DICTION[handle] = twitter_results
+	f = open(CACHE_FNAME, 'w')
+	f.write(json.dumps(CACHE_DICTION))
+	f.close()
+	return twitter_results
 
-get_wsj_tl = get_user_tl("wsj")
+def get_user_info(handle):
+	twitter_results2 = api.get_user(handle)
+	CACHE_DICTION2[handle] = twitter_results2
+	f = open(CACHE_FNAME2, 'w')
+	f.write(json.dumps(CACHE_DICTION2))
+	f.close()
+	return twitter_results2
+'''
+def get_followers_user(handle):
+	twitter_results = api.followers(handle)
+	CACHE_DICTION[handle] = twitter_results
+	f = open(CACHE_FNAME, 'w')
+	f.write(json.dumps(CACHE_DICTION))
+	f.close()
+	return twitter_results
+'''
+'''
+def get_existing_friendship(handlea, handleb):
+	twitter_results = api.exists_friendship(handlea, handleb)
+	CACHE_DICTION[handle] = twitter_results
+	f = open(CACHE_FNAME, 'w')
+	f.write(json.dumps(CACHE_DICTION))
+	f.close()
+	return twitter_results
+'''
+def ombd_movie_search(title):
+	url1 = 'http://www.omdbapi.com/?'
+	parameters = {'t': title}
+	parameters['t'] = title
+	ombd_api = requests.get(url = url1, params = parameters)
+	ombd_results = json.loads(ombd_api.text)
+	CACHE_DICTION[title] = ombd_results
+	f = open(CACHE_FNAME, 'w')
+	f.write(json.dumps(CACHE_DICTION))
+	f.close()
+	return ombd_results
+
+
+
+#get_wsj_tl = get_user_tl("wsj")
+#get_fox_tl = get_user_tl("foxnews")
+#get_nyt_tl = get_user_tl("nytimes")
+
+#get_followers_wsj = get_followers_user("wsj")
+#get_followers_fox = get_followers_user("foxnews")
+#get_followers_nyt = get_followers_user("nytimes")
 
 
 conn = sqlite3.connect('final_project.db')
 cur = conn.cursor()
+
 cur.execute('DROP TABLE IF EXISTS tracks')
 table_spec = 'CREATE TABLE IF NOT EXISTS '
-table_spec += 'fox_followers (screen_name TEXT PRIMARY KEY, '
-table_spec += 'description TEXT, num_fols INTEGER)'
+table_spec += 'Tweets (tweet_id INTEGER PRIMARY KEY, '
+table_spec += 'tweet TEXT, user TEXT, movie_search TEXT, num_favs INTEGER, num_retweets INTEGER) '
 cur.execute(table_spec)
+
+cur.execute('DROP TABLE IF EXISTS tracks')
+table_spec = 'CREATE TABLE IF NOT EXISTS '
+table_spec += 'Users (user_id INTEGER PRIMARY KEY, ' #check if integer is correct
+table_spec += 'screen_name TEXT, total_num_favs INTEGER)'
+cur.execute(table_spec)
+
+cur.execute('DROP TABLE IF EXISTS tracks')
+table_spec = 'CREATE TABLE IF NOT EXISTS '
+table_spec += 'Movies (movie_id INTEGER PRIMARY KEY, '
+table_spec += 'title TEXT, director TEXT, num_languages INTEGER, rating INTEGER, top_billed_actor TEXT)'
+cur.execute(table_spec)
+
+class Movie(object): 
+	def __init__(self, title_dictionary):
+		self.title = title_dictionary['Title']
+		self.director = title_dictionary['Director']
+		self.rating = title_dictionary['imdbRating']
+		self.num_languages = title_dictionary['Language']
+		self.year_released = title_dictionary['Year']
+
+	def __str__(self):
+		return "Title: {} \nDirector: {} \nRating:{} \nLanguages: {} \nYear Released {} ".format(self.title, self.director, self.rating, self.num_languages, self.year_released)
+
+	def __integers__(self):
+		return ('Number of languages: ' + len(self.year_released.split(',')) + ', {}').format(self.year_released)
+		
+movies_list = ["Blow", "Charlie Bartlett", "The Big Lebowski"]
+inglo_bast = ombd_movie_search(movies_list[0])
+#print(inglo_bast)
+#char_bart = ombd_movie_search(movies_list[1])
+#big_lebo = ombd_movie_search(movies_list[2])
+
+#movies_results_list = [inglo_bast, char_bart, big_lebo]
+
+movies_list_dict = [ombd_movie_search(g) for g in movies_list]
+
+
+movie_class_invocations = [Movie(q) for q in movies_list_dict]
+
+for x in movie_class_invocations: 
+	print(x, "type: ", type(x), '\n')
+
+titles = []
+for x in movies_list_dict: 
+	title1 = x['Title']
+	print('titles: ', title1, '\n')
+	title_info = search_twitter(title1)
+	titles.append(title_info)
+
+print('type of list of instances', type(titles), '\n')
+print(titles)
+
+users = []
+for x in titles: 
+	#user_posted = x['screen_name']
+	#users.append(user_posted)
+	for entries in x:
+		#mention_screen_name = x["entities"]["user_mentions"]
+		user_screen_name = x['user']['screen_name']
+		users.appens(mention_screen_name, user_screen_name)
+	'''
+	status = x['statuses'] 
+	for q in status: 
+		user = q['user']
+		for o in user: 
+			user_name = o['screen_name']
+			users.append(user_name)
+		entities = x['entities']
+		for w in entities: 
+			mentions = w['user_mentions']
+			for t in mentions: 
+				name = t['screen_name']
+				users.append(name)
+
+print("USERS: ", users, '\n')
+#user_info = []
+'''
+
+
+
+
+
+
+class Tweet(object): 
+	def __init__(self, info_dict):
+		self.id = info_dict['id_str']
+		self.text = info_dict['text']
+		self.user_posted = info_dict['imdbRating']
+		self.num_favs = info_dict['favorite_count']
+		self.num_retweets = info_dict['retweet_count']
+
+	def __str__(self):
+		return "Title: {} \nDirector: {} \nRating:{} \nLanguages: {} \nYear Released {} ".format(self.title, self.director, self.rating, self.num_languages, self.year_released)
+
+
+
+'''
+	cur = conn.cursor()
+	cur.execute('DROP TABLE IF EXISTS tracks')
+	table_spec = 'CREATE TABLE IF NOT EXISTS '
+	table_spec += 'fox_followers (screen_name TEXT PRIMARY KEY, '
+	table_spec += 'description TEXT, num_fols INTEGER)'
+	cur.execute(table_spec)
 
 	#creating wsj_followers table
-cur.execute('DROP TABLE IF EXISTS tracks')
-table_spec = 'CREATE TABLE IF NOT EXISTS '
-table_spec += 'wsj_followers (screen_name TEXT PRIMARY KEY, '
-table_spec += 'description TEXT, num_fols INTEGER)'
-cur.execute(table_spec)
+	cur.execute('DROP TABLE IF EXISTS tracks')
+	table_spec = 'CREATE TABLE IF NOT EXISTS '
+	table_spec += 'wsj_followers (screen_name TEXT PRIMARY KEY, '
+	table_spec += 'description TEXT, num_fols INTEGER)'
+	cur.execute(table_spec)
 
 	#creating nyimes_followers table
-cur.execute('DROP TABLE IF EXISTS tracks')
-table_spec = 'CREATE TABLE IF NOT EXISTS '
-table_spec += 'nytimes_followers (screen_name TEXT PRIMARY KEY, '
-table_spec += 'description TEXT, num_fols INTEGER)'
-cur.execute(table_spec)
+	cur.execute('DROP TABLE IF EXISTS tracks')
+	table_spec = 'CREATE TABLE IF NOT EXISTS '
+	table_spec += 'nytimes_followers (screen_name TEXT PRIMARY KEY, '
+	table_spec += 'description TEXT, num_fols INTEGER)'
+	cur.execute(table_spec)
 
 	#creating wsj_tl table
-cur.execute('DROP TABLE IF EXISTS tracks')
-table_spec = 'CREATE TABLE IF NOT EXISTS '
-table_spec += 'wsj_tl (user_id INTEGER PRIMARY KEY, '
-table_spec += 'screen_name TEXT, tweets TEXT, retweets INTEGER)'
-cur.execute(table_spec)
+	cur.execute('DROP TABLE IF EXISTS tracks')
+	table_spec = 'CREATE TABLE IF NOT EXISTS '
+	table_spec += 'wsj_tl (user_id INTEGER PRIMARY KEY, '
+	table_spec += 'screen_name TEXT, tweets TEXT, retweets INTEGER)'
+	cur.execute(table_spec)
 
 	#creating fox_tl table
-cur.execute('DROP TABLE IF EXISTS tracks')
-table_spec = 'CREATE TABLE IF NOT EXISTS '
-table_spec += 'fox_tl (user_id INTEGER PRIMARY KEY, '
-table_spec += 'screen_name TEXT, tweets TEXT, retweets INTEGER)'
-cur.execute(table_spec)
+	cur.execute('DROP TABLE IF EXISTS tracks')
+	table_spec = 'CREATE TABLE IF NOT EXISTS '
+	table_spec += 'fox_tl (user_id INTEGER PRIMARY KEY, '
+	table_spec += 'screen_name TEXT, tweets TEXT, retweets INTEGER)'
+	cur.execute(table_spec)
 
-	#creating nyt_tl table
-cur.execute('DROP TABLE IF EXISTS tracks')
-table_spec = 'CREATE TABLE IF NOT EXISTS '
-table_spec += 'nyt_tl (user_id INTEGER PRIMARY KEY, '
-table_spec += 'screen_name TEXT, tweets TEXT, retweets INTEGER)'
-cur.execute(table_spec)
+		#creating nyt_tl table
+	cur.execute('DROP TABLE IF EXISTS tracks')
+	table_spec = 'CREATE TABLE IF NOT EXISTS '
+	table_spec += 'nyt_tl (user_id INTEGER PRIMARY KEY, '
+	table_spec += 'screen_name TEXT, tweets TEXT, retweets INTEGER)'
+	cur.execute(table_spec)
 
-	#loading data into wsj_tl table. NOTE: I haven't coded get_wsj_tl yet, but it will contain the invocation of the api request for the home timeline info for wsj, as stated previously in my directions
-wsj_tl_list = []
-for tweet in wsj_tl_list:
-	wsj_tl_id = get_wsj_tl["id_str"]
-	wsj_screenname = get_wsj_tl['screen_name']
-	wsj_description = get_wsj_tl["text"]
-	tuples = (wsj_tl_id, wsj_screenname, wsj_description)
-	wsj_tl_list.append(tuples)
-statement = 'INSERT OR IGNORE INTO Users VALUES (?, ?, ?)'
-for t in wsj_tl_list: 
-	cur.execute(statement, t)
-conn.commit()
-conn.close()
+		#loading data into wsj_tl table. NOTE: I haven't coded get_wsj_tl yet, but it will contain the invocation of the api request for the home timeline info for wsj, as stated previously in my directions
+	wsj_tl_list = []
+	for tweet in wsj_tl_list:
+		wsj_tl_id = get_wsj_tl["id_str"]
+		wsj_screenname = get_wsj_tl['screen_name']
+		wsj_description = get_wsj_tl["text"]
+		tuples = (wsj_tl_id, wsj_screenname, wsj_description)
+		wsj_tl_list.append(tuples)
+	statement = 'INSERT OR IGNORE INTO Users VALUES (?, ?, ?)'
+	for t in wsj_tl_list: 
+		cur.execute(statement, t)
+	conn.commit()
+	conn.close()
+
+	'''
 '''
 	connect to database, establish cursor, drop if exists and create it not, create database "Final_Project" with tables "fox_followers", "wsj_followers", and "nytimes_followers". 
 	In each of those tables, include columns screen_name, description, num_fols
